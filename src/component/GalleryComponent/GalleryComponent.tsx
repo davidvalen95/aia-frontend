@@ -1,6 +1,7 @@
 import React, {FC, useEffect} from 'react';
 import styles from './GalleryComponent.module.scss';
 import axios from "axios";
+import PaginationComponent, {PaginationInterface} from "../PaginationComponent/PaginationComponent";
 interface GalleryComponentProps {}
 
 
@@ -9,27 +10,43 @@ export class GalleryComponent extends  React.PureComponent{
 
     query = "";
 
+
+    public pagination:PaginationInterface =  {
+    page:1,
+    totalPage: 200,
+}
+    public tag = "";
     constructor(public props:any) {
         super(props);
         this.state = {
-            images: []
+            images: [],
+
         }
     }
     componentDidMount() {
 
         this.getData()
     }
-    getData(param={}){
+    getData(param:any={}){
 
+        param.page = this.pagination.page
+        param.tag = this.tag;
         axios.get('http://localhost:3015',{params:param}).then(axiosResponse=>{
             var result = axiosResponse.data
             console.log(result);
+            this.pagination = result.pagination;
             this.setState({
-                images: result.items
+                images: result.items,
             })
         })
     }
 
+
+    public pageChange(page:number){
+
+        this.pagination.page = page;
+        this.getData({})
+    }
   public  onSubmitSearchForm(e:any){
         e.preventDefault();
 
@@ -40,8 +57,10 @@ export class GalleryComponent extends  React.PureComponent{
                     carry[current.getAttribute("name")] = current.type === "file" ? current.files : current.value
                 return carry;
             },{});
-        console.log(data);
-        this.getData(data)
+
+        this.tag = data.tag;
+        this.pagination.page = 1;
+        this.getData()
     }
 
     render() {
@@ -59,6 +78,11 @@ export class GalleryComponent extends  React.PureComponent{
                                 </div>
                                 <button type="submit" className="btn btn-primary">Search</button>
                             </form>
+                        </div>
+
+                        <div className="col-12">
+
+                            <PaginationComponent pagination={this.pagination} onPageChange={(page)=>{this.pageChange(page)}} />
                         </div>
                         {
 
